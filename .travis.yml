@@ -1,15 +1,13 @@
 language: node_js
 node_js: node
 services:
-  - mongodb
+- mongodb
 env:
-  - NODE_ENV=test
-# services:
-#   - [DATABASE-TYPE]  
-# deploy:
-#   provider: heroku
-#   api_key:
-#     secure: [YOUR-API-KEY]
-#   app: [YOUR-APP-NAME]
-#   on:
-#     repo: [YOUR-APP-REPO]
+- NODE_ENV=test
+deploy:
+  provider: heroku
+  api_key:
+    secure: p0mDINzsC0ycfl0+9J51tah8K8kHGwVdFZXFD05dtNYIfm61Uua9AfepsqpFoL38d2xEMxeWyj87Y99h8yf63BFI35CrlUVxjWFZaX5jz6F3NR1eGuDd70ZJgwk0lc9Rq/0JLSfp+1u3EIR9alBhZVUkcH2qQqcb46juh43Jt1qgVUwvpthw5pHIsq54fx4vosd1Ns7o8+VJBvYrYf6tRQmY4B7+LPWbQlqfAZCdpwUnoPlYd/X1gKx0VDLk7SzdG+deJtohGkXYY/U1CkHM2VLyAIBoVfKwUKATm54pSKYRFeO6+Zdk1jUmviwKKu6mVNPteqc8dWdI2Rr+TQzSioDYo5eCe6hyok9LH+vSTk5cFwq4bGvXqRGW4zxHZHG74bil4cpKR/QBh9V7Y5cLpCjTyd/A7JdohJ0OubBz/BDUeGfHSb76sy2oeWae5YPHjnJ4jFTzCtcaNPJA50H6R5ovliOzqOBh5oRWU+pQRFjIN5mG9NQ0cCt9WqVfpA6Se+Y7KH7lEwsqYKLs8JprBofOm0hHclBwZGSK9Dn6WUL6eOfqzJg9knxGmA4S5K0BQrKqpjT5Ys1gHK1uqSimJGKKC4HilBThEzMppPFcfJXfTlo3Ul5/ei9ioAJwAPVFWfba0frZKSMzFZLg6UiCnYquSuNZi1UBJOnpe3bGWYg=
+  app: dylan-noteful-app-v3
+  on:
+    repo: thinkful-ei19/dylan-noteful-v3
