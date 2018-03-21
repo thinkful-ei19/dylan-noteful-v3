@@ -1,193 +1,126 @@
 'use strict';
 
 const express = require('express');
-// Create an router instance (aka "mini-app")
 const router = express.Router();
+
 const mongoose = require('mongoose');
-const { MONGODB_URI } = require('../config');
 
 const Note = require('../models/note');
 
-/* ========== GET/READ ALL ITEM ========== */
+/* ========== GET/READ ALL ITEMS ========== */
 router.get('/notes', (req, res, next) => {
-  // mongoose
-  //   .connect(MONGODB_URI)
-  //   .then(() => {
-  //     const searchTerm = req.query.searchTerm;
-  //     let filter = {};
+  const { searchTerm } = req.query;
 
-  //     if (searchTerm) {
-  //       const re = new RegExp(searchTerm, 'i');
-  //       filter.title = { $regex: re };
-  //     }
+  let filter = {};
+  let projection = {};
+  let sort = 'created'; // default sorting
 
-  //     return Note.find(filter)
-  //       .sort('created')
-  //       .then(results => {
-  //         res.json(results);
-  //       })
-  //       .catch(next);
-  //   })
-  //   .then(() => {
-  //     return mongoose.disconnect().then(() => {
-  //       console.info('Disconnected');
-  //     });
-  //   })
-  //   .catch(err => {
-  //     console.error(`ERROR: ${err.message}`);
-  //     console.error(err);
-  //   });
+  if (searchTerm) {
+    filter.$text = { $search: searchTerm };
+    projection.score = { $meta: 'textScore' };
+    sort = projection;
+  }
 
-  mongoose
-    .connect(MONGODB_URI)
-    .then(() => Note.createIndexes())
-    .then(() => {
-      const searchTerm = req.query.searchTerm;
-
-      let filter = {};
-
-      if (searchTerm) {
-        filter.$text = { $search: searchTerm };
-      }
-
-      return Note.find(
-        filter,
-        { score: { $meta: 'textScore' } }
-      ).sort({ score: { $meta: 'textScore' } })
-        .then(results => {
-          res.json(results);
-        })
-        .catch(next);
-    })
-    .then(() => {
-      return mongoose.disconnect().then(() => {
-        console.info('Disconnected');
-      });
+  Note.find(filter, projection)
+    .sort(sort)
+    .then(results => {
+      res.json(results);
     })
     .catch(err => {
-      console.error(`ERROR: ${err.message}`);
-      console.error(err);
+      next(err);
     });
-
-
 });
 
 /* ========== GET/READ A SINGLE ITEM ========== */
 router.get('/notes/:id', (req, res, next) => {
-  // console.log('Get a Note');
-  // res.json({ id: 2 });
+  const { id } = req.params;
 
-  mongoose
-    .connect(MONGODB_URI)
-    .then(() => {
-      const id = req.params.id;
-      console.log(id);
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error('The `id` is not valid');
+    err.status = 400;
+    return next(err);
+  }
 
-      return Note.findById(id)
-        .then(result => {
-          res.json(result);
-        })
-        .catch(next);
-    })
-    .then(() => {
-      return mongoose.disconnect().then(() => {
-        console.info('Disconnected');
-      });
+  Note.findById(id)
+    .then(result => {
+      if (result) {
+        res.json(result);
+      } else {
+        next();
+      }
     })
     .catch(err => {
-      console.error(`ERROR: ${err.message}`);
-      console.error(err);
+      next(err);
     });
 });
 
 /* ========== POST/CREATE AN ITEM ========== */
 router.post('/notes', (req, res, next) => {
+  const { title, content } = req.body;
 
-  mongoose
-    .connect(MONGODB_URI)
-    .then(() => {
-      const newData = {
-        title: req.body.title,
-        content: req.body.content
-      };
+  /***** Never trust users - validate input *****/
+  if (!title) {
+    const err = new Error('Missing `title` in request body');
+    err.status = 400;
+    return next(err);
+  }
 
-      return Note.create(newData)
-        .then(result => {
-          res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
-        })
-        .catch(next);
-    })
-    .then(() => {
-      return mongoose.disconnect().then(() => {
-        console.info('Disconnected');
-      });
+  const newItem = { title, content };
+
+  Note.create(newItem)
+    .then(result => {
+      res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
     })
     .catch(err => {
-      console.error(`ERROR: ${err.message}`);
-      console.error(err);
+      next(err);
     });
-
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
 router.put('/notes/:id', (req, res, next) => {
+  const { id } = req.params;
+  const { title, content } = req.body;
 
-  mongoose
-    .connect(MONGODB_URI)
-    .then(() => {
-      const id = req.params.id;
-      const updatedData = {
-        title: req.body.title,
-        content: req.body.content
-      };
+  /***** Never trust users - validate input *****/
+  if (!title) {
+    const err = new Error('Missing `title` in request body');
+    err.status = 400;
+    return next(err);
+  }
 
-      if (!updatedData.title) {
-        const err = new Error('Missing `title` in request body.');
-        console.error(err);
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error('The `id` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+
+  const updateItem = { title, content };
+  const options = { new: true };
+
+  Note.findByIdAndUpdate(id, updateItem, options)
+    .then(result => {
+      if (result) {
+        res.json(result);
+      } else {
+        next();
       }
-
-      return Note.findByIdAndUpdate(id, updatedData, { new: true })
-        .then(result => {
-          res.json(result).status(200);
-        })
-        .catch(next);
-    })
-    .then(() => {
-      return mongoose.disconnect().then(() => {
-        console.info('Disconnected');
-      });
     })
     .catch(err => {
-      console.error(`ERROR: ${err.message}`);
-      console.error(err);
+      next(err);
     });
-
 });
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
 router.delete('/notes/:id', (req, res, next) => {
+  const { id } = req.params;
 
-  mongoose
-    .connect(MONGODB_URI)
+  Note.findByIdAndRemove(id)
     .then(() => {
-      const id = req.params.id;
-
-      return Note.findByIdAndRemove(id)
-        .then(() => {
-          res.status(204).end();
-        })
-        .catch(next);
-    })
-    .then(() => {
-      return mongoose.disconnect().then(() => {
-        console.info('Disconnected');
-      });
+      res.status(204).end();
     })
     .catch(err => {
-      console.error(`ERROR: ${err.message}`);
-      console.error(err);
+      next(err);
     });
-
 });
 
 module.exports = router;
