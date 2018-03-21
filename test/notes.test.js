@@ -206,16 +206,16 @@ describe('Notes Tests', function () {
         });
     });
 
-    // it('should respond with a 404 for an invalid id', function () {
+    it('should respond with a 404 for an invalid id', function () {
 
-    //   return chai.request(app)
-    //     .delete('/api/notes/AAAAAAAAAAAAAAAAAAAAAAAA')
-    //     .catch(err => err.response)
-    //     .then(res => {
-    //       console.log(res.status);
-    //       expect(res).to.have.status(404);
-    //     });
-    // });
+      return chai.request(app)
+        .delete('/api/notes/AAAAAAAAAAAAAAAAAAAAAAAA')
+        .catch(err => err.response)
+        .then(res => {
+          console.log(res.status);
+          expect(res).to.have.status(404);
+        });
+    });
 
   });
 
